@@ -59,6 +59,20 @@ app.use(cookieParser());
 // --------------------------------------------------
 app.use('/api/v1', routes);
 
+// Root endpoint
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    name: 'Eco Space API',
+    status: 'online',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      v1: '/api/v1',
+    },
+  });
+});
+
 // Health check (outside /api/v1 prefix)
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -66,6 +80,27 @@ app.get('/api/health', (_req, res) => {
     status: 'Server is running',
     timestamp: new Date().toISOString(),
   });
+});
+
+// Cron trigger endpoint (for Vercel Cron Jobs)
+app.get('/api/cron/subscription', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && req.headers.authorization !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+
+  try {
+    const { runSubscriptionCleanup } = await import('./jobs/subscriptionCron.js');
+    const result = await runSubscriptionCleanup();
+    res.json({
+      success: true,
+      message: 'Subscription cleanup executed',
+      ...result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // 404 handler for undefined routes
