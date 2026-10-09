@@ -1,0 +1,195 @@
+// ==========================================
+// 1. CONFIGURATION
+// ==========================================
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 2. ENUMS
+// ==========================================
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum PaymentStatus {
+  FREE
+  PENDING_VERIFICATION // User uploaded BaridiMob/CCP receipt, awaiting admin approval
+  ACTIVE
+  EXPIRED
+}
+
+enum PaymentMethod {
+  BARIDIMOB
+  CCP
+  EDAHABIA_CIB
+  CASH_HAND_TO_HAND
+}
+
+enum ResourceType {
+  SUMMARY
+  PRACTICE_EXAM
+  CHEAT_SHEET
+  LECTURE_NOTES
+}
+
+// ==========================================
+// 3. MODELS
+// ==========================================
+
+model Institution {
+  id          Int      @id @default(autoincrement())
+  name        String   // e.g., "École Supérieure de Commerce"
+  shortCode   String   @unique // e.g., "ESC", "EHEC", "ENSM", "ESGEN", "ENSSEA"
+  focus       String?  // Focus/Specialization description
+  description String?
+
+  courses     Course[]
+  users       User[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Course {
+  id            Int         @id @default(autoincrement())
+  institutionId Int
+  title         String      // e.g., "Analyse Mathématique 1"
+  code          String      // e.g., "MATH101"
+  yearLevel     String      // e.g., "1CP", "2CP", "1CS", "2CS", "3CS"
+  semester      Int         // 1 or 2
+  
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  resources     Resource[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Optimizes queries like: "Get all 1CP courses at ESI"
+  @@index([institutionId, yearLevel])
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  passwordHash  String
+  fullName      String
+  phoneNumber   String       @unique // Format: +2136XXXXXXXX
+  sex           Gender
+  
+  isAdmin       Boolean      @default(false)
+
+  // Academic Context
+  institutionId Int?
+  studyLevel    String?      // e.g., "1CP", "1CS"
+  
+  institution   Institution? @relation(fields: [institutionId], references: [id])
+
+  // Password Reset
+  passwordResetToken   String?   @unique
+  passwordResetExpiry  DateTime?
+
+  // Payment & Subscription
+  paymentStatus PaymentStatus @default(FREE)
+  paidUntil     DateTime?     // Null if free or pending, holds expiration date if active
+
+  // Relations
+  payments      Payment[]
+  accessLogs    ResourceAccessLog[]
+  refreshTokens RefreshToken[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+/// Stores refresh tokens in the database for secure revocation.
+/// When a user logs out, their token is deleted. When a token is compromised,
+/// all tokens for that user can be revoked at once.
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Predefined subscription plans with fixed pricing and duration.
+/// Admins can create/update/deactivate plans. Users select a plan when submitting payment.
+model SubscriptionPlan {
+  id          Int      @id @default(autoincrement())
+  name        String   // e.g., "Monthly", "Semester", "Annual"
+  durationDays Int     // e.g., 30, 120, 365
+  price       Float    // e.g., 500, 1500, 3000 (DZD)
+  isActive    Boolean  @default(true) // Soft-delete: deactivate instead of deleting
+
+  payments    Payment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  userId          String
+  amount          Float
+  method          PaymentMethod
+  receiptImageKey  String?       // Path in S3/R2 to the screenshot of the transfer
+  isApproved       Boolean       @default(false)
+  rejectionReason  String?       // Reason for admin rejection (e.g., "Invalid receipt number")
+  
+  // Link to subscription plan (optional for backward compat)
+  planId           Int?
+  plan             SubscriptionPlan? @relation(fields: [planId], references: [id])
+
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Resource {
+  id            String       @id @default(uuid())
+  courseId      Int
+  title         String       // e.g., "Chapitre 1 & 2 Résumé + Astuces"
+  resourceType  ResourceType
+  
+  fileKey       String       // Path in Cloudflare R2 / AWS S3 (e.g., "docs/math101_summary.pdf")
+  sizeBytes     Int
+  isPublished   Boolean      @default(false) // Allows uploading drafts before making them public
+  
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  accessLogs    ResourceAccessLog[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([courseId])
+}
+
+// Audit Log for Security and Analytics
+model ResourceAccessLog {
+  id          String   @id @default(uuid())
+  userId      String
+  resourceId  String
+  ipAddress   String?
+  userAgent   String?  // Tracks the device/browser
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  accessedAt  DateTime @default(now())
+
+  // Optimizes rate-limiting queries (e.g., checking how many docs a user opened recently)
+  @@index([userId, accessedAt]) 
+}
