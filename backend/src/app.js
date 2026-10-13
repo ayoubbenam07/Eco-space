@@ -13,6 +13,9 @@ import { errorMiddleware } from './middlewares/error.middleware.js';
 // --------------------------------------------------
 const app = express();
 
+// Trust reverse proxy (e.g., Vercel, AWS, Render) so req.ip and express-rate-limit work correctly
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet());
 
