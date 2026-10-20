@@ -272,15 +272,21 @@ export async function changePassword(userId, currentPassword, newPassword) {
 
 /**
  * Forgot password — generate a secure reset token and store it.
- * Returns the token (caller is responsible for sending it via email/SMS).
+ * Returns the token and user details for sending the reset email.
  */
 export async function forgotPassword(email) {
-  const user = await prisma.user.findUnique({
-    where: { email },
-    select: { id: true },
+  const normalizedEmail = email?.trim();
+  const user = await prisma.user.findFirst({
+    where: {
+      email: {
+        equals: normalizedEmail,
+        mode: 'insensitive',
+      },
+    },
+    select: { id: true, email: true, fullName: true },
   });
 
-  // Always return success to prevent email enumeration
+  // Always return null to prevent email enumeration
   if (!user) return null;
 
   const resetToken = crypto.randomBytes(32).toString('hex');
@@ -295,14 +301,14 @@ export async function forgotPassword(email) {
     },
   });
 
-  return resetToken;
+  return { resetToken, user };
 }
 
 /**
  * Reset password using a valid reset token.
  */
 export async function resetPassword(token, newPassword) {
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const hashedToken = crypto.createHash('sha256').update(token.trim()).digest('hex');
 
   const user = await prisma.user.findFirst({
     where: {

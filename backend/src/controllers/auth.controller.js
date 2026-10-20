@@ -1,4 +1,6 @@
 import * as authService from '../services/auth.service.js';
+import { sendPasswordResetEmail } from '../services/email.service.js';
+import logger from '../utils/logger.js';
 
 /**
  * POST /api/v1/auth/register
@@ -143,18 +145,28 @@ export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    const resetToken = await authService.forgotPassword(email);
+    const result = await authService.forgotPassword(email);
 
-    // In production, send this token via email.
-    // For now, return it in response (dev/testing only).
+    if (result) {
+      try {
+        await sendPasswordResetEmail({
+          to: result.user.email,
+          fullName: result.user.fullName,
+          resetToken: result.resetToken,
+        });
+      } catch (emailError) {
+        logger.error(`[Auth] Failed to send password reset email to ${email}: ${emailError.message}`);
+      }
+    }
+
     const response = {
       success: true,
-      message: 'If an account with that email exists, a password reset link has been generated.',
+      message: 'If an account with that email exists, password reset instructions have been sent.',
     };
 
-    // Only include token in non-production for testing
-    if (!process.env.NODE_ENV || process.env.NODE_ENV !== 'production') {
-      response.resetToken = resetToken;
+    // Include resetToken in non-production for local testing
+    if (process.env.NODE_ENV !== 'production' && result?.resetToken) {
+      response.resetToken = result.resetToken;
     }
 
     res.status(200).json(response);

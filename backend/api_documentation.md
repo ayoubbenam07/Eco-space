@@ -250,13 +250,15 @@ Revokes **all** refresh tokens for the authenticated user (logs out from all dev
 ```json
 {
   "success": true,
-  "message": "If an account with that email exists, a password reset link has been generated.",
-  "resetToken": "a1b2c3d4e5f6..."
+  "message": "If an account with that email exists, password reset instructions have been sent."
 }
 ```
 
-> [!WARNING]
-> The `resetToken` field is only returned in **non-production** environments for testing. In production, the token should be sent via email.
+> [!NOTE]
+> An email with a styled HTML password reset link (`/reset-password?token=...`) and reset code is automatically sent to the recipient's email using Nodemailer.
+> - The reset token is valid for 1 hour.
+> - The `resetToken` field is also returned in **non-production** environments for automated testing.
+> - Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS` in `.env` to connect your email provider (e.g. Gmail, Resend, Brevo). If SMTP is not yet configured, the reset link is logged to the server console.
 
 ---
 

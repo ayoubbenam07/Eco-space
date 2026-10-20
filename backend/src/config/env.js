@@ -49,6 +49,18 @@ const env = {
   r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   r2BucketName: process.env.R2_BUCKET_NAME,
   r2PublicUrl: process.env.R2_PUBLIC_URL || '',
+
+  // Email / SMTP (Password reset and notifications)
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: parseInt(process.env.SMTP_PORT, 10) || 587,
+  smtpSecure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  smtpService: process.env.SMTP_SERVICE || '',
+  smtpFrom:
+    process.env.SMTP_FROM ||
+    process.env.EMAIL_FROM ||
+    (process.env.SMTP_USER ? `"Eco Space" <${process.env.SMTP_USER}>` : '"Eco Space" <noreply@ecospace.dz>'),
 };
 
 export default env;
