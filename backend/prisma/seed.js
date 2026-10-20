@@ -335,7 +335,55 @@ async function main() {
     console.log(`\n  👤 Admin user verified: ${adminEmail}`);
   }
 
-  console.log('\n✨ All institutions and courses seeded successfully!\n');
+  // ==============================
+  // 4. Subscription Plans
+  // ==============================
+  const plansData = [
+    {
+      name: 'Monthly',
+      durationDays: 30,
+      price: 500,
+      isActive: true,
+    },
+    {
+      name: 'Semester',
+      durationDays: 120,
+      price: 1500,
+      isActive: true,
+    },
+    {
+      name: 'Annual',
+      durationDays: 365,
+      price: 3000,
+      isActive: true,
+    },
+  ];
+
+  console.log('\n  💳 Seeding subscription plans...');
+  for (const plan of plansData) {
+    const existing = await prisma.subscriptionPlan.findFirst({
+      where: { name: plan.name },
+    });
+
+    if (!existing) {
+      const created = await prisma.subscriptionPlan.create({
+        data: plan,
+      });
+      console.log(`  ✅ Created plan: ${created.name} - ${created.price} DZD (${created.durationDays} days, ID: ${created.id})`);
+    } else {
+      const updated = await prisma.subscriptionPlan.update({
+        where: { id: existing.id },
+        data: {
+          durationDays: plan.durationDays,
+          price: plan.price,
+          isActive: plan.isActive,
+        },
+      });
+      console.log(`  ✅ Updated plan: ${updated.name} - ${updated.price} DZD (${updated.durationDays} days, ID: ${updated.id})`);
+    }
+  }
+
+  console.log('\n✨ Database seed completed successfully!\n');
 }
 
 main()

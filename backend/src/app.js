@@ -1,3 +1,4 @@
+import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -16,8 +17,10 @@ const app = express();
 // Trust reverse proxy (e.g., Vercel, AWS, Render) so req.ip and express-rate-limit work correctly
 app.set('trust proxy', 1);
 
-// Security headers
-app.use(helmet());
+// Security headers (allow cross-origin for local uploads and images)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 // CORS configuration — never use '*' with credentials: true
 // In production, FRONTEND_URL must be set to the actual frontend origin.
@@ -56,6 +59,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // Cookie parser
 app.use(cookieParser());
+
+// --------------------------------------------------
+// Local File Storage — Serve uploads for local development
+// --------------------------------------------------
+app.use('/api/v1/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 // --------------------------------------------------
 // API Routes — all prefixed with /api/v1

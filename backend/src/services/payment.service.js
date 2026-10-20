@@ -97,26 +97,124 @@ export async function getPaymentHistory(userId, page = 1, limit = 20) {
 }
 
 /**
- * Quick payment status check for a user.
+/**
+ * Automatically synchronize and reconcile a user's subscription status based on payment records.
+ * - If user has approved payments: sets paymentStatus = ACTIVE and computes paidUntil (or EXPIRED if in past).
+ * - If user has unapproved pending payments: sets paymentStatus = PENDING_VERIFICATION.
+ * - If user has no active approved or pending payments: sets paymentStatus = FREE.
  */
-export async function getPaymentStatus(userId) {
+export async function syncUserSubscriptionStatus(userId) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
+      id: true,
       paymentStatus: true,
       paidUntil: true,
+      isAdmin: true,
     },
   });
 
-  if (!user) {
+  if (!user || user.isAdmin) return user;
+
+  const now = new Date();
+
+  // Find all approved payments for this user with plan info
+  const approvedPayments = await prisma.payment.findMany({
+    where: { userId, isApproved: true },
+    include: { plan: { select: { durationDays: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (approvedPayments.length > 0) {
+    let latestExpiry = user.paidUntil ? new Date(user.paidUntil) : null;
+
+    for (const payment of approvedPayments) {
+      const durationDays = payment.plan?.durationDays || 30;
+      const baseDate = new Date(payment.createdAt || now);
+      const paymentExpiry = new Date(baseDate);
+      paymentExpiry.setDate(paymentExpiry.getDate() + durationDays);
+
+      if (!latestExpiry || paymentExpiry > latestExpiry) {
+        latestExpiry = paymentExpiry;
+      }
+    }
+
+    if (latestExpiry && latestExpiry > now) {
+      if (user.paymentStatus !== 'ACTIVE' || !user.paidUntil || new Date(user.paidUntil).getTime() !== latestExpiry.getTime()) {
+        const updated = await prisma.user.update({
+          where: { id: userId },
+          data: {
+            paymentStatus: 'ACTIVE',
+            paidUntil: latestExpiry,
+          },
+        });
+        return updated;
+      }
+      return user;
+    } else if (latestExpiry && latestExpiry <= now) {
+      if (user.paymentStatus !== 'EXPIRED') {
+        const updated = await prisma.user.update({
+          where: { id: userId },
+          data: {
+            paymentStatus: 'EXPIRED',
+          },
+        });
+        return updated;
+      }
+      return user;
+    }
+  }
+
+  // Check if user has an unapproved pending payment
+  const pendingPayment = await prisma.payment.findFirst({
+    where: {
+      userId,
+      isApproved: false,
+      rejectionReason: null,
+    },
+  });
+
+  if (pendingPayment) {
+    if (user.paymentStatus !== 'PENDING_VERIFICATION') {
+      const updated = await prisma.user.update({
+        where: { id: userId },
+        data: { paymentStatus: 'PENDING_VERIFICATION' },
+      });
+      return updated;
+    }
+    return user;
+  }
+
+  // No approved active payments and no pending payments
+  if (user.paymentStatus !== 'FREE' || user.paidUntil !== null) {
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        paymentStatus: 'FREE',
+        paidUntil: null,
+      },
+    });
+    return updated;
+  }
+
+  return user;
+}
+
+/**
+ * Quick payment status check for a user.
+ */
+export async function getPaymentStatus(userId) {
+  const syncedUser = await syncUserSubscriptionStatus(userId);
+
+  if (!syncedUser) {
     const error = new Error('User not found.');
     error.statusCode = 404;
     throw error;
   }
 
   return {
-    status: user.paymentStatus,
-    paidUntil: user.paidUntil,
+    status: syncedUser.paymentStatus,
+    paidUntil: syncedUser.paidUntil,
   };
 }
 

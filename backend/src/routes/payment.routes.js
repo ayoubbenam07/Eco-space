@@ -7,11 +7,11 @@ import { submitPaymentSchema } from '../utils/validators.js';
 
 const router = Router();
 
-// All payment routes require authentication
-router.use(authMiddleware);
-
-// List available subscription plans
+// Public: List available subscription plans
 router.get('/plans', paymentController.getActivePlans);
+
+// All subsequent payment routes require authentication
+router.use(authMiddleware);
 
 // Submit payment with receipt
 router.post('/submit', uploadReceipt, validate(submitPaymentSchema), paymentController.submit);

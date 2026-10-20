@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../config/db.js';
 import env from '../config/env.js';
+import { syncUserSubscriptionStatus } from './payment.service.js';
 
 const SALT_ROUNDS = 10;
 
@@ -201,6 +202,9 @@ export async function logoutAll(userId) {
  * Get the current user's full profile (used by GET /auth/me).
  */
 export async function getProfile(userId) {
+  // Synchronize subscription status based on actual payments
+  await syncUserSubscriptionStatus(userId);
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {

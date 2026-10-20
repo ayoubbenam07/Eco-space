@@ -9,10 +9,6 @@ const requiredVars = [
   'DATABASE_URL',
   'JWT_SECRET',
   'JWT_REFRESH_SECRET',
-  'R2_ACCOUNT_ID',
-  'R2_ACCESS_KEY_ID',
-  'R2_SECRET_ACCESS_KEY',
-  'R2_BUCKET_NAME',
 ];
 
 const missing = requiredVars.filter((key) => !process.env[key]);
@@ -33,6 +29,12 @@ const env = {
 
   // Frontend URL (required for CORS with credentials)
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+
+  // Backend URL (used for local uploads and direct links)
+  backendUrl: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5001}`,
+
+  // Storage driver ('auto', 'r2', 'local')
+  storageDriver: process.env.STORAGE_DRIVER || 'auto',
 
   // Database
   databaseUrl: process.env.DATABASE_URL,
