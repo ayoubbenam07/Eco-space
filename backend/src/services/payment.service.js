@@ -114,7 +114,7 @@ export async function syncUserSubscriptionStatus(userId) {
     },
   });
 
-  if (!user || user.isAdmin) return user;
+  if (!user) return user;
 
   const now = new Date();
 
@@ -312,13 +312,11 @@ export async function rejectPayment(paymentId, reason) {
       },
     });
 
-    await tx.user.update({
-      where: { id: payment.userId },
-      data: { paymentStatus: 'FREE' },
-    });
-
     return updatedPayment;
   });
+
+  // Reconcile user's subscription status based on any existing approved or pending payments
+  await syncUserSubscriptionStatus(payment.userId);
 
   return result;
 }
