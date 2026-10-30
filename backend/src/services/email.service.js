@@ -69,180 +69,283 @@ export function getTransporter() {
 function generatePasswordResetHtml({ fullName, resetUrl, resetToken }) {
   const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
 
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Reset Your Password — Eco Space</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #0b0f19;
+      background-color: #f7f6f3;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #f1f5f9;
+      color: #1c201e;
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
     .wrapper {
       width: 100%;
-      background-color: #0b0f19;
+      background-color: #f7f6f3;
       padding: 40px 16px;
       box-sizing: border-box;
     }
     .container {
-      max-width: 560px;
+      max-width: 580px;
       margin: 0 auto;
-      background-color: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      padding: 36px 32px;
+      background-color: #ffffff;
+      border: 1px solid #e5e4de;
+      border-radius: 16px;
+      padding: 0;
       box-sizing: border-box;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 16px 36px -4px rgba(28, 32, 30, 0.08);
+      overflow: hidden;
     }
-    .header {
+    .accent-bar {
+      height: 4px;
+      background: linear-gradient(90deg, #1f6f52 0%, #34d399 50%, #1f6f52 100%);
+    }
+    .card-body {
+      padding: 36px 36px 28px 36px;
+    }
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
       margin-bottom: 28px;
-      border-bottom: 1px solid #1f2937;
       padding-bottom: 20px;
+      border-bottom: 1px solid #efefea;
     }
-    .brand {
+    .logo-badge {
       display: inline-block;
+      width: 38px;
+      height: 38px;
+      line-height: 38px;
+      background-color: #1c201e;
+      border-radius: 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .brand-title {
+      font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
       font-size: 22px;
-      font-weight: 700;
-      color: #10b981;
-      letter-spacing: -0.5px;
+      font-weight: 400;
+      color: #1c201e;
+      line-height: 1.1;
+      margin: 0;
       text-decoration: none;
     }
-    .brand span {
-      color: #f9fafb;
+    .brand-subtitle {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #1f6f52;
+      margin-top: 2px;
+      line-height: 1;
     }
-    .badge {
+    .pill {
       display: inline-block;
-      background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
+      background-color: #edf5f1;
+      border: 1px solid #d1e7dc;
+      color: #1f6f52;
       font-size: 11px;
       font-weight: 600;
-      padding: 2px 8px;
+      padding: 4px 12px;
       border-radius: 9999px;
-      margin-left: 8px;
-      vertical-align: middle;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.02em;
     }
     h1 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #f9fafb;
-      margin: 0 0 16px 0;
+      font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+      font-size: 32px;
+      font-weight: 400;
+      color: #1c201e;
+      margin: 0 0 14px 0;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
     }
     p {
       font-size: 15px;
-      color: #94a3b8;
+      color: #4a524d;
       margin: 0 0 16px 0;
+      line-height: 1.6;
     }
     .button-container {
-      margin: 28px 0;
+      margin: 30px 0 26px 0;
       text-align: center;
     }
     .btn {
       display: inline-block;
-      background-color: #10b981;
+      background-color: #1f6f52;
       color: #ffffff !important;
       font-size: 15px;
       font-weight: 600;
       text-decoration: none;
-      padding: 13px 28px;
-      border-radius: 8px;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-      transition: background-color 0.2s ease;
+      padding: 13px 34px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(31, 111, 82, 0.28);
+      letter-spacing: -0.01em;
     }
     .code-box {
-      background-color: #0f172a;
-      border: 1px dashed #334155;
-      border-radius: 8px;
-      padding: 16px;
+      background-color: #f8f7f4;
+      border: 1px solid #e5e4de;
+      border-radius: 12px;
+      padding: 18px 20px;
       text-align: center;
       margin: 24px 0;
     }
     .code-label {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #64748b;
-      margin-bottom: 6px;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+      color: #1f6f52;
+      margin-bottom: 8px;
     }
     .code-value {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 18px;
-      font-weight: 600;
-      color: #38bdf8;
-      letter-spacing: 1px;
+      font-size: 19px;
+      font-weight: 700;
+      color: #1c201e;
+      letter-spacing: 1.5px;
       word-break: break-all;
+    }
+    .notice-card {
+      background-color: #faf9f6;
+      border-left: 3px solid #1f6f52;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    .notice-card p {
+      font-size: 13px;
+      color: #4a524d;
+      margin: 0;
+      line-height: 1.5;
     }
     .link-fallback {
-      font-size: 13px;
-      color: #64748b;
+      font-size: 12px;
+      color: #7a827c;
       word-break: break-all;
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid #1f2937;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid #efefea;
+      line-height: 1.5;
     }
     .link-fallback a {
-      color: #10b981;
+      color: #1f6f52;
       text-decoration: underline;
     }
-    .footer {
-      margin-top: 28px;
-      padding-top: 20px;
-      border-top: 1px solid #1f2937;
-      font-size: 12px;
-      color: #64748b;
+    .card-footer {
+      background-color: #faf9f6;
+      border-top: 1px solid #e5e4de;
+      padding: 24px 36px;
       text-align: center;
+    }
+    .quote {
+      font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+      font-size: 20px;
+      font-style: italic;
+      color: #1c201e;
+      margin: 0 0 4px 0;
+      line-height: 1.3;
+    }
+    .footer-sub {
+      font-size: 12px;
+      color: #7a827c;
+      margin: 0 0 10px 0;
+    }
+    .copyright {
+      font-size: 11px;
+      color: #9ea6a0;
+      margin: 0;
+    }
+    @media (max-width: 600px) {
+      .card-body {
+        padding: 24px 20px 20px 20px;
+      }
+      .card-footer {
+        padding: 20px 20px;
+      }
+      h1 {
+        font-size: 27px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
     <div class="container">
-      <div class="header">
-        <a href="#" class="brand">Eco<span>Space</span></a>
-        <span class="badge">Security</span>
+      <div class="accent-bar"></div>
+      
+      <div class="card-body">
+        <table class="header-table" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+          <tr>
+            <td align="left" style="vertical-align: middle;">
+              <table cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="vertical-align: middle; padding-right: 12px;">
+                    <div class="logo-badge">
+                      <!-- Leaf Icon (matching website Lucide Leaf) -->
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;">
+                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                      </svg>
+                    </div>
+                  </td>
+                  <td style="vertical-align: middle;">
+                    <div class="brand-title">Eco Space</div>
+                    <div class="brand-subtitle">Study packs</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+            <td align="right" style="vertical-align: middle;">
+              <span class="pill">&#8226; Security</span>
+            </td>
+          </tr>
+        </table>
+
+        <h1>Reset your password</h1>
+        <p>${greeting}</p>
+        <p>We received a request to reset the password for your <strong>Eco Space</strong> account. Click the button below to choose a new password:</p>
+
+        <div class="button-container">
+          <a href="${resetUrl}" target="_blank" class="btn">Reset password</a>
+        </div>
+
+        <div class="code-box">
+          <div class="code-label">Or enter this reset code directly</div>
+          <div class="code-value">${resetToken}</div>
+        </div>
+
+        <div class="notice-card">
+          <p>
+            &#9201; <strong>This reset link is valid for 1 hour.</strong><br>
+            If you did not request this reset, you can safely ignore this email — your current password remains secure and your account is protected.
+          </p>
+        </div>
+
+        <div class="link-fallback">
+          If the button above does not work, copy and paste this link into your browser:<br>
+          <a href="${resetUrl}">${resetUrl}</a>
+        </div>
       </div>
 
-      <h1>Password Reset Request</h1>
-      <p>${greeting}</p>
-      <p>We received a request to reset your password for your <strong>Eco Space</strong> account. Click the button below to set a new password:</p>
-
-      <div class="button-container">
-        <a href="${resetUrl}" target="_blank" class="btn">Reset My Password</a>
-      </div>
-
-      <div class="code-box">
-        <div class="code-label">Or use your reset token / code directly:</div>
-        <div class="code-value">${resetToken}</div>
-      </div>
-
-      <p style="font-size: 13px; color: #94a3b8;">
-        ⏱️ <strong>This reset link is valid for 1 hour.</strong>
-      </p>
-      <p style="font-size: 13px; color: #94a3b8;">
-        If you did not request a password reset, you can safely ignore this email. Your current password will remain unchanged and your account is secure.
-      </p>
-
-      <div class="link-fallback">
-        If the button above does not work, copy and paste this link into your browser:<br>
-        <a href="${resetUrl}">${resetUrl}</a>
-      </div>
-
-      <div class="footer">
-        © ${new Date().getFullYear()} Eco Space. Higher Schools of Economics & Management.
+      <div class="card-footer">
+        <p class="quote">&ldquo;Less searching, more understanding.&rdquo;</p>
+        <p class="footer-sub">Organized, high-yield study packs for Algerian engineering & management schools.</p>
+        <p class="copyright">&copy; ${new Date().getFullYear()} Eco Space. All rights reserved.</p>
       </div>
     </div>
   </div>
 </body>
-</html>
-  `;
+</html>`;
 }
 
 /**
