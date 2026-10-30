@@ -32,10 +32,14 @@ enum PaymentMethod {
 }
 
 enum ResourceType {
-  SUMMARY
+  LECTURE
+  LAB
+  WORKSHEET
   PRACTICE_EXAM
+  TEXTBOOK
+  SUMMARY
   CHEAT_SHEET
-  LECTURE_NOTES
+  SUPPLEMENTARY
 }
 
 // ==========================================

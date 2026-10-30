@@ -40,11 +40,22 @@ export async function submitPayment(userId, { amount, method, planId, receiptBuf
       },
     });
 
-    // Update user payment status to pending
-    await tx.user.update({
+    // Update user payment status to pending if not already actively subscribed
+    const currentUser = await tx.user.findUnique({
       where: { id: userId },
-      data: { paymentStatus: 'PENDING_VERIFICATION' },
+      select: { paymentStatus: true, paidUntil: true },
     });
+    const isCurrentlyActive =
+      currentUser?.paymentStatus === 'ACTIVE' &&
+      currentUser?.paidUntil &&
+      new Date(currentUser.paidUntil) > new Date();
+
+    if (!isCurrentlyActive) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { paymentStatus: 'PENDING_VERIFICATION' },
+      });
+    }
 
     return newPayment;
   });
@@ -325,17 +336,10 @@ export async function rejectPayment(paymentId, reason) {
  * Admin: Get all payments with PENDING_VERIFICATION status.
  */
 export async function getPendingPayments() {
-  const pendingUsers = await prisma.user.findMany({
-    where: { paymentStatus: 'PENDING_VERIFICATION' },
-    select: { id: true },
-  });
-
-  const userIds = pendingUsers.map((u) => u.id);
-
   const payments = await prisma.payment.findMany({
     where: {
-      userId: { in: userIds },
       isApproved: false,
+      rejectionReason: null,
     },
     orderBy: { createdAt: 'asc' },
     select: {

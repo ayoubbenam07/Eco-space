@@ -1092,7 +1092,7 @@ List all resources (drafts + published) with filtering and pagination.
 | `document` | File | ✅ | PDF file (max 50MB) |
 | `courseId` | Number | ✅ | Course ID |
 | `title` | String | ✅ | Resource title |
-| `resourceType` | String | ✅ | `SUMMARY`, `PRACTICE_EXAM`, `CHEAT_SHEET`, or `LECTURE_NOTES` |
+| `resourceType` | String | ✅ | `LECTURE`, `LAB`, `WORKSHEET`, `PRACTICE_EXAM`, `TEXTBOOK`, `SUMMARY`, `CHEAT_SHEET`, or `SUPPLEMENTARY` |
 
 **curl example:**
 ```bash

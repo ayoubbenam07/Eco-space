@@ -741,15 +741,23 @@ export const getStats = async (_req, res, next) => {
   try {
     const [totalUsers, activeSubscribers, totalResources, pendingPayments, totalRevenue] =
       await Promise.all([
-        prisma.user.count(),
+        prisma.user.count({
+          where: { isAdmin: false },
+        }),
         prisma.user.count({
           where: {
+            isAdmin: false,
             paymentStatus: 'ACTIVE',
             paidUntil: { gt: new Date() },
           },
         }),
         prisma.resource.count({ where: { isPublished: true } }),
-        prisma.user.count({ where: { paymentStatus: 'PENDING_VERIFICATION' } }),
+        prisma.payment.count({
+          where: {
+            isApproved: false,
+            rejectionReason: null,
+          },
+        }),
         prisma.payment.aggregate({
           where: { isApproved: true },
           _sum: { amount: true },

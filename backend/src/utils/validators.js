@@ -10,9 +10,15 @@ const genderField = z.enum(['MALE', 'FEMALE'], { errorMap: () => ({ message: 'Se
 const studyLevelField = z.enum(['1CP', '2CP', '1CS', '2CS', '3CS'], {
   errorMap: () => ({ message: 'Study level must be one of: 1CP, 2CP, 1CS, 2CS, 3CS.' }),
 });
-const resourceTypeField = z.enum(['SUMMARY', 'PRACTICE_EXAM', 'CHEAT_SHEET', 'LECTURE_NOTES'], {
-  errorMap: () => ({ message: 'resourceType must be one of: SUMMARY, PRACTICE_EXAM, CHEAT_SHEET, LECTURE_NOTES.' }),
-});
+const resourceTypeField = z.enum(
+  ['LECTURE', 'LAB', 'WORKSHEET', 'PRACTICE_EXAM', 'TEXTBOOK', 'SUMMARY', 'CHEAT_SHEET', 'SUPPLEMENTARY'],
+  {
+    errorMap: () => ({
+      message:
+        'resourceType must be one of: LECTURE, LAB, WORKSHEET, PRACTICE_EXAM, TEXTBOOK, SUMMARY, CHEAT_SHEET, SUPPLEMENTARY.',
+    }),
+  }
+);
 const paymentMethodField = z.enum(['BARIDIMOB', 'CCP', 'EDAHABIA_CIB', 'CASH_HAND_TO_HAND'], {
   errorMap: () => ({ message: 'Payment method must be one of: BARIDIMOB, CCP, EDAHABIA_CIB, CASH_HAND_TO_HAND.' }),
 });
