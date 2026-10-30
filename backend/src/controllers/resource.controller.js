@@ -1,4 +1,44 @@
+import prisma from '../config/db.js';
 import * as resourceService from '../services/resource.service.js';
+
+/**
+ * POST /api/v1/resources/validate
+ * Authenticated — Validate if a list of resource IDs still exist (and are published if user is not admin).
+ * Used by frontend to clean up stale/deleted items in "Recently Viewed".
+ */
+export const validateResources = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: { existingIds: [] },
+      });
+    }
+
+    const safeIds = ids.filter((id) => typeof id === 'string').slice(0, 50);
+
+    const where = {
+      id: { in: safeIds },
+    };
+
+    if (!req.user?.isAdmin) {
+      where.isPublished = true;
+    }
+
+    const existing = await prisma.resource.findMany({
+      where,
+      select: { id: true },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { existingIds: existing.map((r) => r.id) },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * GET /api/v1/resources/:id

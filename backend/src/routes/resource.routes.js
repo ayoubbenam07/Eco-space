@@ -6,8 +6,14 @@ import { rateLimiterMiddleware } from '../middlewares/rateLimiter.middleware.js'
 
 const router = Router();
 
-// All resource routes require auth + active subscription
-router.use(authMiddleware, subscriptionMiddleware);
+// Requires authentication
+router.use(authMiddleware);
+
+// Batch validate resource existence (for Recently Viewed & cache validation)
+router.post('/validate', resourceController.validateResources);
+
+// The following routes require active subscription (or admin)
+router.use(subscriptionMiddleware);
 
 // Resource metadata
 router.get('/:id', resourceController.getMeta);
