@@ -141,7 +141,7 @@ export async function syncUserSubscriptionStatus(userId) {
 
     for (const payment of approvedPayments) {
       const durationDays = payment.plan?.durationDays || 30;
-      const baseDate = new Date(payment.createdAt || now);
+      const baseDate = new Date(payment.updatedAt || payment.createdAt || now);
       const paymentExpiry = new Date(baseDate);
       paymentExpiry.setDate(paymentExpiry.getDate() + durationDays);
 

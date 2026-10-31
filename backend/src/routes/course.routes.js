@@ -7,6 +7,7 @@ const router = Router();
 // All course routes require authentication
 router.use(authMiddleware);
 
+router.get('/', courseController.listCourses);
 router.get('/:id', courseController.getById);
 router.get('/:id/resources', courseController.getResources);
 

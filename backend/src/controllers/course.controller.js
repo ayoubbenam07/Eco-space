@@ -1,6 +1,79 @@
 import prisma from '../config/db.js';
 
 /**
+ * GET /api/v1/courses
+ * User — List courses across all institutions or filtered by school, level, semester, search.
+ * Query params: ?institutionId=1&yearLevel=1CP&semester=1&search=math&page=1&limit=60
+ */
+export const listCourses = async (req, res, next) => {
+  try {
+    const { institutionId, yearLevel, semester, page = 1, limit = 60, search } = req.query;
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = {};
+    if (institutionId) {
+      where.institutionId = parseInt(institutionId, 10);
+    }
+    if (yearLevel) {
+      where.yearLevel = yearLevel;
+    }
+    if (semester) {
+      where.semester = parseInt(semester, 10);
+    }
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [courses, total] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        skip,
+        take: limitNum,
+        orderBy: [{ yearLevel: 'asc' }, { semester: 'asc' }, { title: 'asc' }],
+        select: {
+          id: true,
+          title: true,
+          code: true,
+          yearLevel: true,
+          semester: true,
+          createdAt: true,
+          institution: {
+            select: {
+              id: true,
+              name: true,
+              shortCode: true,
+            },
+          },
+          _count: {
+            select: { resources: true },
+          },
+        },
+      }),
+      prisma.course.count({ where }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: courses,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * GET /api/v1/courses/:id
  * User — Get course details with institution info.
  */
