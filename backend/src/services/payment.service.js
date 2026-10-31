@@ -254,8 +254,11 @@ export async function getActivePlans() {
 export async function approvePayment(paymentId, durationDays = 30) {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    select: { id: true, userId: true, isApproved: true, planId: true },
-    include: {
+    select: {
+      id: true,
+      userId: true,
+      isApproved: true,
+      planId: true,
       plan: { select: { durationDays: true } },
     },
   });
